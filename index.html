@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login e Registro com Efeito Interativo de Água</title>
+    <!-- Ionicons para ícones dos campos de entrada -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #040d1a;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Canvas interativo da água de fundo */
+        #waterCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            pointer-events: all;
+        }
+
+        /* Iluminação e gradiente sutil sobre a água */
+        .vignette {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at center, rgba(14, 165, 233, 0.08) 0%, rgba(3, 105, 161, 0.25) 50%, rgba(2, 6, 23, 0.75) 100%);
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* --- SEÇÕES DE CONTEÚDO PRINCIPAL --- */
+        .main-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 1000px;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .page-section {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            color: #fff;
+            background: rgba(15, 23, 42, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 40px;
+            border-radius: 24px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            pointer-events: all;
+            animation: fadeInWater 0.6s ease forwards;
+        }
+
+        .page-section.active-section {
+            display: flex;
+        }
+
+        @keyframes fadeInWater {
+            0% {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .page-section h1 {
+            font-size: 2.8em;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #ffffff, #7dd3fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-section p {
+            font-size: 1.1em;
+            max-width: 650px;
+            line-height: 1.6;
+            color: #e2e8f0;
+            margin-bottom: 25px;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .service-card {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-card:hover {
+            transform: translateY(-5px);
+            background: rgba(56, 189, 248, 0.2);
+            border-color: #38bdf8;
+            box-shadow: 0 10px 25px rgba(56, 189, 248, 0.25);
+        }
+
+        .service-card ion-icon {
+            font-size: 2.5em;
+            color: #38bdf8;
+            margin-bottom: 10px;
+        }
+
+        .contact-form {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .contact-form input, .contact-form textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            color: #fff;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .contact-form input:focus, .contact-form textarea:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+        }
+
+        header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px 80px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 99;
+        }
+
+        .logo {
+            font-size: 2em;
+            color: #fff;
+            user-select: none;
+            font-weight: 900 !important;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .navigation {
+            display: flex;
+            align-items: center;
+        }
+
+        .navigation a {
+            position: relative;
+            font-size: 1.1em;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+            margin-left: 40px;
+        }
+
+        .navigation a::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -6px;
+            width: 100%;
+            height: 3px;
+            background: #38bdf8;
+            border-radius: 5px;
+            transform: scaleX(0);
+            transition: transform .5s;
+        }
+
+        .navigation a.nav-active::after,
+        .navigation a:hover::after {
+            transform-origin: left;
+            transform: scaleX(1);
+        }
+
+        .navigation .btnLogin-popup {
+            width: 130px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            outline: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1.1em;
+            color: #fff;
+            font-weight: 500;
+            margin-left: 40px;
+            transition: all 0.4s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .navigation .btnLogin-popup:hover {
+            background: #fff;
+            color: #0369a1;
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.6);
+            transform: translateY(-2px);
+        }
+
+        /* --- WRAPPER / MODAL POPUP COM ANIMAÇÃO EM FORMATO DE ÁGUA --- */
+        .wrapper {
+            position: relative;
+            width: 400px;
+            height: 460px;
+            background: rgba(15, 23, 42, 0.65);
+            border: 2px solid rgba(56, 189, 248, 0.4);
+            border-radius: 28px;
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 40px rgba(56, 189, 248, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            transform: scale(0);
+            opacity: 0;
+            border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                        opacity 0.4s ease,
+                        border-radius 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                        height 0.3s ease;
+            z-index: 100;
+        }
+
+        /* Efeito visual de gota expandindo */
+        .wrapper.active-popup {
+            transform: scale(1);
+            opacity: 1;
+            border-radius: 28px;
+            animation: waterDropRipple 0.8s ease-out;
+        }
+
+        @keyframes waterDropRipple {
+            0% {
+                transform: scale(0.1);
+                border-radius: 50% 50% 10% 90% / 30% 70% 30% 70%;
+                box-shadow: 0 0 80px rgba(56, 189, 248, 0.9);
+            }
+            50% {
+                transform: scale(1.05);
+                border-radius: 40% 60% 70% 30% / 50% 30% 70% 50%;
+                box-shadow: 0 0 60px rgba(56, 189, 248, 0.6);
+            }
+            75% {
+                transform: scale(0.98);
+                border-radius: 24px 32px 20px 30px / 30px 20px 32px 24px;
+            }
+            100% {
+                transform: scale(1);
+                border-radius: 28px;
+            }
+        }
+
+        .wrapper.active {
+            height: 560px;
+        }
+
+        /* --- FORMULÁRIOS --- */
+        .wrapper .form-box {
+            width: 100%;
+            padding: 40px;
+        }
+
+        .wrapper .form-box.login {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .wrapper.active .form-box.login {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            transform: translateX(-400px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .wrapper .form-box.register {
+            position: absolute;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            transform: translateX(400px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .wrapper.active .form-box.register {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            transform: translateX(0);
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .wrapper .icon-close {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 45px;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.15);
+            font-size: 1.6em;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom-left-radius: 20px;
+            cursor: pointer;
+            z-index: 10;
+            transition: 0.3s;
+        }
+
+        .wrapper .icon-close:hover {
+            background: rgba(239, 68, 68, 0.8);
+            color: #fff;
+        }
+
+        .form-box h2 {
+            font-size: 2em;
+            color: #fff;
+            text-align: center;
+            letter-spacing: 0.5px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* --- INPUTS --- */
+        .input-box {
+            position: relative;
+            width: 100%;
+            height: 50px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.7);
+            margin: 25px 0;
+            transition: border-color 0.3s;
+        }
+
+        .input-box:focus-within {
+            border-bottom-color: #38bdf8;
+        }
+
+        .input-box label {
+            position: absolute;
+            top: 50%;
+            left: 5px;
+            transform: translateY(-50%);
+            font-size: 1em;
+            color: #e2e8f0;
+            font-weight: 500;
+            pointer-events: none;
+            transition: 0.4s ease;
+        }
+
+        .input-box input:focus ~ label,
+        .input-box input:valid ~ label {
+            top: -5px;
+            font-size: 0.85em;
+            color: #38bdf8;
+        }
+
+        .input-box input {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            font-size: 1em;
+            color: #fff;
+            font-weight: 500;
+            padding: 0 45px 0 5px;
+        }
+
+        .input-box .icon {
+            position: absolute;
+            right: 8px;
+            font-size: 1.2em;
+            color: #e2e8f0;
+            line-height: 55px;
+            transition: color 0.3s;
+        }
+
+        .input-box .toggle-password {
+            cursor: pointer;
+        }
+
+        .input-box .toggle-password:hover {
+            color: #38bdf8;
+        }
+
+        /* Indicador de Força de Senha */
+        .strength-meter {
+            height: 4px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.15);
+            margin-top: -15px;
+            margin-bottom: 15px;
+            border-radius: 2px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+
+        /* --- NOTIFICAÇÃO TOAST --- */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid #38bdf8;
+            backdrop-filter: blur(12px);
+            color: #fff;
+            padding: 14px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(56, 189, 248, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast ion-icon {
+            font-size: 1.4em;
+            color: #38bdf8;
+        }
+
+        /* --- CHECKBOX E LINK --- */
+        .remember-forgot {
+            font-size: .9em;
+            color: #e2e8f0;
+            font-weight: 500;
+            margin: -10px 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .remember-forgot label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .remember-forgot label input {
+            accent-color: #0284c7;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .remember-forgot a {
+            color: #38bdf8;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .remember-forgot a:hover {
+            text-decoration: underline;
+            color: #7dd3fc;
+        }
+
+        .btn {
+            width: 100%;
+            height: 48px;
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            border: none;
+            outline: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.05em;
+            color: #fff;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #0369a1, #0284c7);
+            box-shadow: 0 6px 20px rgba(56, 189, 248, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .login-register {
+            font-size: .9em;
+            color: #e2e8f0;
+            text-align: center;
+            font-weight: 500;
+            margin: 20px 0 10px;
+        }
+
+        .login-register p a {
+            color: #38bdf8;
+            text-decoration: none;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+
+        .login-register p a:hover {
+            text-decoration: underline;
+            color: #7dd3fc;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 15px 25px;
+            }
+            .navigation a {
+                display: none;
+            }
+            .wrapper {
+                width: 90%;
+                max-width: 380px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Canvas interativo de simulação de fluido de água -->
+    <canvas id="waterCanvas"></canvas>
+
+    <!-- Camada de profundidade e contraste -->
+    <div class="vignette"></div>
+
+    <!-- Notificação Toast -->
+    <div id="toast" class="toast">
+        <ion-icon name="information-circle-outline"></ion-icon>
+        <span id="toastMsg">Mensagem aqui</span>
+    </div>
+
+    <!-- Cabeçalho -->
+    <header>
+        <h2 class="logo">WaterUI</h2>
+        <nav class="navigation">
+            <a href="#" class="nav-link nav-active" data-target="home">Início</a>
+            <a href="#" class="nav-link" data-target="sobre">Sobre</a>
+            <a href="#" class="nav-link" data-target="servicos">Serviços</a>
+            <a href="#" class="nav-link" data-target="contato">Contato</a>
+            <button class="btnLogin-popup">Login</button>
+        </nav>
+    </header>
+
+    <!-- Seções de Conteúdo Dinâmicas do Menu -->
+    <main class="main-content">
+        <!-- Início -->
+        <section id="home" class="page-section active-section">
+            <h1>Experiência Fluida & Interativa</h1>
+            <p>Seja bem-vindo ao WaterUI. Uma plataforma moderna focada em design generativo e interfaces que reagem aos movimentos do usuário em tempo real.</p>
+            <button class="btn" style="width: auto; padding: 0 30px;" onclick="document.querySelector('.btnLogin-popup').click()">Começar Agora</button>
+        </section>
+
+        <!-- Sobre -->
+        <section id="sobre" class="page-section">
+            <h1>Sobre Nossa Tecnologia</h1>
+            <p>Desenvolvemos componentes interativos utilizando WebGL e física de fluidos para criar experiências imersivas no navegador, aliando estética e alta performance.</p>
+        </section>
+
+        <!-- Serviços -->
+        <section id="servicos" class="page-section">
+            <h1>Nossos Serviços</h1>
+            <p>Soluções digitais prontas para elevar a presença do seu produto visualmente.</p>
+            <div class="services-grid">
+                <div class="service-card">
+                    <ion-icon name="water-outline"></ion-icon>
+                    <h3>UI Interativa</h3>
+                    <p>Design dinâmico com efeitos aquáticos e simulação visual de partículas.</p>
+                </div>
+                <div class="service-card">
+                    <ion-icon name="code-working-outline"></ion-icon>
+                    <h3>Sistemas Web</h3>
+                    <p>Aplicações modernas em JavaScript, responsivas e integradas.</p>
+                </div>
+                <div class="service-card">
+                    <ion-icon name="shield-checkmark-outline"></ion-icon>
+                    <h3>Segurança</h3>
+                    <p>Autenticação fluida e validação de dados em tempo real.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contato -->
+        <section id="contato" class="page-section">
+            <h1>Fale Conosco</h1>
+            <p>Envie uma mensagem e retornaremos em breve.</p>
+            <form class="contact-form" onsubmit="event.preventDefault(); showToast('Mensagem enviada com sucesso!');">
+                <input type="text" placeholder="Seu Nome" required>
+                <input type="email" placeholder="Seu E-mail" required>
+                <textarea rows="4" placeholder="Sua Mensagem" required></textarea>
+                <button type="submit" class="btn">Enviar Mensagem</button>
+            </form>
+        </section>
+    </main>
+
+    <!-- Modal Popup Principal -->
+    <div class="wrapper">
+        <span class="icon-close"><ion-icon name="close-outline"></ion-icon></span>
+        
+        <!-- Formulário de Login -->
+        <div class="form-box login">
+            <h2>Login</h2>
+            <form action="#" onsubmit="event.preventDefault(); showToast('Login efetuado com sucesso!');">
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="mail-outline"></ion-icon></span>
+                    <input type="email" required>
+                    <label>Email</label>
+                </div>
+                <div class="input-box">
+                    <span class="icon toggle-password" onclick="togglePass('loginPass', this)"><ion-icon name="eye-outline"></ion-icon></span>
+                    <input type="password" id="loginPass" required>
+                    <label>Senha</label>
+                </div>
+                <div class="remember-forgot">
+                    <label><input type="checkbox"> Lembrar-me</label>
+                    <a href="#" onclick="showToast('Link de recuperação enviado ao seu email!')">Esqueceu a senha?</a>
+                </div>
+                <button type="submit" class="btn">Entrar</button>
+                <div class="login-register">
+                    <p>Não tem uma conta? <a href="#" class="register-link">Cadastrar</a></p>
+                </div>
+            </form>
+        </div>
+
+        <!-- Formulário de Registro -->
+        <div class="form-box register">
+            <h2>Cadastro</h2>
+            <form action="#" onsubmit="event.preventDefault(); showToast('Conta criada com sucesso!');">
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="person-outline"></ion-icon></span>
+                    <input type="text" required>
+                    <label>Usuário</label>
+                </div>
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="mail-outline"></ion-icon></span>
+                    <input type="email" required>
+                    <label>Email</label>
+                </div>
+                <div class="input-box">
+                    <span class="icon toggle-password" onclick="togglePass('regPass', this)"><ion-icon name="eye-outline"></ion-icon></span>
+                    <input type="password" id="regPass" oninput="checkStrength(this.value)" required>
+                    <label>Senha</label>
+                </div>
+                <div class="strength-meter" id="strengthMeter">
+                    <div class="strength-bar" id="strengthBar"></div>
+                </div>
+                <div class="remember-forgot">
+                    <label><input type="checkbox" required> Termos e Condições</label>
+                </div>
+                <button type="submit" class="btn">Cadastrar</button>
+                <div class="login-register">
+                    <p>Já tem uma conta? <a href="#" class="login-link">Fazer Login</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Script de Simulação da Água e Eventos -->
+    <script>
+        const wrapper = document.querySelector('.wrapper');
+        const loginLink = document.querySelector('.login-link');
+        const registerLink = document.querySelector('.register-link');
+        const btnPopup = document.querySelector('.btnLogin-popup');
+        const iconClose = document.querySelector('.icon-close');
+        
+        // Controle de Navegação das Abas
+        const navLinks = document.querySelectorAll('.nav-link');
+        const pageSections = document.querySelectorAll('.page-section');
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = link.getAttribute('data-target');
+
+                navLinks.forEach(l => l.classList.remove('nav-active'));
+                link.classList.add('nav-active');
+
+                pageSections.forEach(section => {
+                    if (section.id === targetId) {
+                        section.classList.add('active-section');
+                    } else {
+                        section.classList.remove('active-section');
+                    }
+                });
+            });
+        });
+
+        // Notificação Toast
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            toastMsg.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3500);
+        }
+
+        // Alternar Visibilidade da Senha
+        function togglePass(inputId, iconEl) {
+            const input = document.getElementById(inputId);
+            const icon = iconEl.querySelector('ion-icon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.setAttribute('name', 'eye-off-outline');
+            } else {
+                input.type = 'password';
+                icon.setAttribute('name', 'eye-outline');
+            }
+        }
+
+        // Indicador de Força de Senha
+        function checkStrength(pass) {
+            const meter = document.getElementById('strengthMeter');
+            const bar = document.getElementById('strengthBar');
+            if (!pass) {
+                meter.style.display = 'none';
+                return;
+            }
+            meter.style.display = 'block';
+
+            let score = 0;
+            if (pass.length >= 6) score++;
+            if (pass.length >= 10) score++;
+            if (/[A-Z]/.test(pass)) score++;
+            if (/[0-9]/.test(pass)) score++;
+            if (/[^A-Za-z0-9]/.test(pass)) score++;
+
+            if (score <= 2) {
+                bar.style.width = '33%';
+                bar.style.backgroundColor = '#ef4444'; // Vermelho
+            } else if (score <= 4) {
+                bar.style.width = '66%';
+                bar.style.backgroundColor = '#f59e0b'; // Amarelo
+            } else {
+                bar.style.width = '100%';
+                bar.style.backgroundColor = '#10b981'; // Verde
+            }
+        }
+
+        if (registerLink && wrapper) {
+            registerLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                wrapper.classList.add('active');
+            });
+        }
+
+        if (loginLink && wrapper) {
+            loginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                wrapper.classList.remove('active');
+            });
+        }
+
+        if (btnPopup && wrapper) {
+            btnPopup.addEventListener('click', () => {
+                wrapper.classList.add('active-popup');
+            });
+        }
+
+        if (iconClose && wrapper) {
+            iconClose.addEventListener('click', () => {
+                wrapper.classList.remove('active-popup');
+                wrapper.classList.remove('active');
+            });
+        }
+    </script>
+</body>
+</html>
